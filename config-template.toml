@@ -72,7 +72,7 @@ topic_default = "main"
 #   id       - Unique agent identifier (e.g., "gpt4_analyst", "claude_mediator")
 #   provider - openai, google, or anthropic
 #   model    - Model name (e.g., gpt-4, claude-3-sonnet, gemini-1.5-pro)
-#   api_key  - API key (or omit and use OPENAI_API_KEY, GOOGLE_API_KEY, ANTHROPIC_API_KEY env vars)
+#   api_key  - API key (or omit and use OPENAI_KEY, GOOGLE_KEY, ANTHROPIC_KEY env vars)
 #
 # OPTIONAL per agent:
 #   role              - Agent role in scenario (e.g., analyst, interrogator, judge)
@@ -91,7 +91,7 @@ topic_default = "main"
 id = "gpt4_analyst"
 provider = "openai"
 model = "gpt-4"
-api_key = "sk-..."                    # Or: export OPENAI_API_KEY and omit this line
+api_key = "sk-..."                    # Or: export OPENAI_KEY and omit this line
 temperature = 0.5                     # Lower = more focused, deterministic
 max_tokens = 2000
 role = "analyst"
@@ -120,7 +120,7 @@ subscriptions = ["main"]
 # id = "gemini_researcher"
 # provider = "google"
 # model = "gemini-1.5-pro"
-# api_key = "AIzaSy..."                # Or: export GOOGLE_API_KEY and omit this line
+# api_key = "AIzaSy..."                # Or: export GOOGLE_KEY and omit this line
 # temperature = 0.5
 # max_tokens = 2000
 # role = "researcher"
@@ -135,7 +135,7 @@ subscriptions = ["main"]
 # id = "claude_mediator"
 # provider = "anthropic"
 # model = "claude-3-sonnet"
-# api_key = "sk-ant-..."               # Or: export ANTHROPIC_API_KEY and omit this line
+# api_key = "sk-ant-..."               # Or: export ANTHROPIC_KEY and omit this line
 # temperature = 0.6
 # max_tokens = 2000
 # role = "mediator"
@@ -533,7 +533,7 @@ subscriptions = ["main"]
 #
 # API KEYS:
 #   - Specify inline: api_key = "sk-..." (not recommended for committed files)
-#   - Use environment: export OPENAI_API_KEY="sk-..." and omit api_key
+#   - Use environment: export OPENAI_KEY="sk-..." and omit api_key
 #   - Both methods work; env vars take precedence
 #
 # MULTIPLE MODELS:

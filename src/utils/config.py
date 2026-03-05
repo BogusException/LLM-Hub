@@ -181,12 +181,12 @@ class ConfigLoader:
 
                 # Resolve API key: config → env var → error
                 api_key = agent.get("api_key") or os.environ.get(
-                    f"{provider.upper()}_API_KEY"
+                    f"{provider.upper()}_KEY"
                 )
                 if not api_key:
                     raise ValueError(
                         f"Agent '{agent_id}' missing API key. "
-                        f"Provide in config as api_key or set {provider.upper()}_API_KEY env var"
+                        f"Provide in config as api_key or set {provider.upper()}_KEY env var"
                     )
 
                 # Resolve system prompt: prefer system_prompt_file if provided, else system_prompt

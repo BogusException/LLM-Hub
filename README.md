@@ -60,6 +60,10 @@ src/
 ├── adapters/                 # LLM provider drivers
 └── utils/                    # Config parsing, logging, debug tools
 
+docs/
+├── QUICKSTART.md             # 5-minute setup and configuration guide
+└── GUIDE.md                  # Complete feature reference and advanced topics
+
 prompts/
 ├── start_examples/           # 5 scenario prompt files
 └── base_system_*.txt         # Role-specific system prompts
