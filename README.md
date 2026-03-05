@@ -1,97 +1,141 @@
 # LAN-LLM-Hub
 
-A configuration-driven multi-agent LLM orchestrator for LAN-hosted conversations between multiple providers (OpenAI, Anthropic, Google) and models.
+A **configuration-driven multi-agent LLM orchestrator** that coordinates conversations between multiple language models across different providers (OpenAI, Anthropic, Google) and local models. Same engine, different configurations for debates, consensus-building, interrogations, adversarial testing, and design reviews.
 
-## Overview
+## Features
 
-LAN-LLM-Hub coordinates conversations between multiple LLM agents across different providers. Different use cases—debate, consensus, interrogation, design review, and adversarial testing—are implemented as **configuration presets**, not separate systems. Same engine, different configuration.
+- **Multi-provider support** — OpenAI (GPT-4, GPT-3.5), Anthropic (Claude), Google (Gemini), local models (Ollama)
+- **Configurable topologies** — Hub-spoke, star, round-robin, mesh, arbiter-gated routing patterns
+- **Per-agent memory management** — Bounded context with rolling summaries to control token costs
+- **Budget enforcement** — Global and per-agent limits on turns, time, and tokens
+- **Scenario presets** — 5 built-in scenarios (debate, consensus, interrogation, adversarial, design review)
+- **Per-agent system prompts** — Inline or file-based (`file://` references) behavior customization
+- **Private messages** — Support for evaluation-style scenarios with judge/arbiter agents
+- **Guardrails** — Loop detection, convergence detection, and cost controls
+- **Human-readable logs** — Tail-friendly session logs + optional JSONL event replay
+- **Cost optimization** — Fanout strategies, memory tuning, and model selection guidance
 
-**Key capabilities:**
-- Route messages between agents in configurable topologies (hub-spoke, star, round-robin, mesh, arbiter-gated)
-- Maintain bounded memory per agent to control token costs
-- Enforce guardrails to prevent infinite loops and runaway budgets
-- Support both public and private messages for evaluation scenarios
-- Generate deterministic, tail-friendly logs for replay and debugging
-- Run multiple instances of the same model with different personas
-
-## Quick Links
-
-- **[QUICKSTART.md](docs/QUICKSTART.md)** — Getting started from scratch (box to first run)
-- **[GUIDE.md](docs/GUIDE.md)** — Complete architecture, topologies, use cases, and advanced configuration
-
-## Common Use Cases
-
-### Debate
-Two or more agents with opposing views discuss a topic.
-
-### Consensus / Design Review
-Agents with different roles (analyst, designer, implementer) reach agreement on a solution.
-
-### Interrogation Harness (Turing Test Style)
-One "actor" agent tries to pass as human; interrogators score confidence privately; judge collects verdicts.
-
-### Adversarial Testing
-An agent tries to find flaws while another defends their reasoning.
-
-## Installation
+## Quick Start
 
 ```bash
 python3.12 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp config-template.toml config.toml
+# cp config-template.toml config.toml  # Copy template, then fill in API keys
+python -m src.hub --config config.toml --prompt-file prompts/start_examples/debate.txt
+tail -f logs/*.log
 ```
 
-Edit `config.toml` with your API keys and agent definitions, then:
+## Documentation
+
+### [QUICKSTART.md](docs/QUICKSTART.md)
+- Installation and initial setup
+- Configuration essentials (session, agents, topology)
+- Using system prompts and per-agent customization
+- Step-by-step walkthrough of 5 scenario examples
+- Environment variables alternative to inline API keys
+- Troubleshooting common issues
+- Running tests
+
+### [GUIDE.md](docs/GUIDE.md)
+- Routing Topologies — Hub-spoke, star, round-robin, mesh, arbiter
+- Fanout Strategies — Broadcast modes and cost impact
+- Memory Management — Window + rolling summary pattern, tuning
+- Guardrails — Max turns, max tokens, loop/convergence detection
+- Cost Optimization — 6 strategies ranked by impact, budget examples
+- Public vs Private Messages — Evaluation scenarios
+- Use Cases — Debate, consensus, interrogation, adversarial, design review
+- Advanced Configuration — Temperature, max_tokens, memory, channels
+- Statistics, Logging, Testing, Troubleshooting
+
+## Project Structure
+
+```
+src/
+├── hub.py                    # Main orchestration loop
+├── session.py                # Session manager and agent definitions
+├── router.py                 # Topology-based routing
+├── memory.py                 # Per-agent bounded memory
+├── guardrails.py             # Budget enforcement and stop conditions
+├── adapters/                 # LLM provider drivers
+└── utils/                    # Config parsing, logging, debug tools
+
+prompts/
+├── start_examples/           # 5 scenario prompt files
+└── base_system_*.txt         # Role-specific system prompts
+
+config-template.toml          # 5 commented scenario examples (commit this)
+config.toml                   # Local config with API keys (gitignore this)
+```
+
+## Core Concepts
+
+**Seven components:**
+1. **Session Manager** — Creates sessions, assigns IDs, manages logs
+2. **Router** — Routes messages between agents based on topology
+3. **Agent Manager** — Loads agent definitions from TOML
+4. **LLM Adapters** — Provider-specific drivers
+5. **Memory Manager** — Bounded context with rolling summaries
+6. **Logging** — Tail-friendly logs + optional JSONL replay
+7. **Guardrails** — Loop detection, budget enforcement, convergence
+
+## Configuration Philosophy
+
+- **Commit**: `config-template.toml` (examples only)
+- **Never commit**: `config.toml` (has API keys)
+- **Secrets**: Environment variables or local config
+- **Scenarios**: Uncomment one of 5 examples, fill in keys, run
+
+## Running
 
 ```bash
+pytest                              # Run tests
+pytest tests/test_integration_live.py  # Live API tests (needs config.toml)
 python -m src.hub --config config.toml --prompt-file prompts/start_examples/debate.txt
 ```
 
-See **[QUICKSTART.md](docs/QUICKSTART.md)** for full details.
+## Cost & Token Usage Warning
 
-## Documentation Structure
+**This program makes real API calls to LLM providers and will incur charges.** Each agent call consumes tokens at the rates set by your provider (OpenAI, Anthropic, Google, etc.). Token costs add up quickly.
 
-| Document | Purpose |
-|----------|---------|
-| [QUICKSTART.md](docs/QUICKSTART.md) | Getting started in 5 minutes |
-| [GUIDE.md](docs/GUIDE.md) | Routing topologies, memory management, guardrails, advanced config |
-| config-template.toml | Configuration reference with 5 complete scenario examples |
-| prompts/base_system_*.txt | System prompts for agent roles (analyst, creative, researcher, etc.) |
+**You are responsible for all charges incurred.** Before running any session:
 
-## Architecture at a Glance
+1. **Understand token costs** — Read your provider's pricing
+2. **Set aggressive limits** in `config.toml`:
+   - `max_tokens_total` — Hard cap on session tokens
+   - `max_turns_total` — Limit conversation length
+   - `max_minutes` — Stop after N minutes elapsed
+3. **Start small** — Test with 5-10 turns before longer runs
+4. **Use cheaper models** — gpt-3.5-turbo, claude-3-haiku for experimentation
+5. **Monitor logs** — Check `logs/*.log` during runs; stop if costs seem high
 
-```
-[Initial Prompt]
-    |
-    v
-Agent 1 (turn 1)
-    |
-    v
-Router → [Agent 2, Agent 3]
-    |
-    v
-Agent 2 (turn 2)
-    |
-    v
-(continue until stop condition)
+Example conservative config:
+```toml
+[session]
+max_turns_total = 10           # Short session
+max_tokens_total = 20000       # ~$0.50 on gpt-4
+max_minutes = 5
 ```
 
-**Core components:**
-1. **Session Manager** — Creates sessions, assigns IDs, manages logs
-2. **Router** — Routes messages between agents based on topology
-3. **Agent Manager** — Loads agent definitions from TOML config
-4. **LLM Adapters** — Provider-specific drivers (normalize to one interface)
-5. **Memory Manager** — Per-agent bounded context (window + rolling summary)
-6. **Logging** — Human-readable logs + optional JSONL events
-7. **Guardrails** — Loop detection, budget enforcement, convergence checks
+**If you don't understand token costs or how to set limits, do not run this program until you do.** Runaway sessions can cost hundreds of dollars in minutes.
 
-## Next Steps
+## Disclaimer
 
-1. Read **[QUICKSTART.md](docs/QUICKSTART.md)** to run your first session
-2. Explore **[GUIDE.md](docs/GUIDE.md)** for routing topologies and advanced scenarios
-3. See `config-template.toml` for all available configuration options
-4. Check `prompts/start_examples/` for example prompts to get started
+This software is provided as-is. **You are solely responsible for:**
+
+- All costs incurred from API calls to LLM providers
+- Understanding your provider's pricing and rate limits
+- Setting appropriate budget limits in your configuration
+- Monitoring usage and stopping sessions if needed
+- Any errors, bugs, or unexpected behavior
+
+The authors and maintainers of this project are not responsible for:
+- Charges or billing issues with third-party LLM providers
+- Loss of data or corrupted logs
+- Unintended behavior or infinite loops (despite guardrails)
+- Misuse or misconfiguration
+
+**Use at your own risk.** Start with small, limited tests. Monitor costs carefully.
 
 ## License
 
