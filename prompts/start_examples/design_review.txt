@@ -1,0 +1,24 @@
+This is a multi-perspective design review for consensus.
+
+Topic: Plan a technical migration from monolithic service to microservices
+
+Participants:
+1. Architect: Focuses on system design, scalability, and technical debt
+2. Operations: Considers deployment, monitoring, incident response, and reliability
+3. Product: Represents business impact, timeline, and customer experience
+
+Objective: Reach consensus on a migration plan covering:
+1. Target architecture (which services to break out first, why)
+2. Phasing strategy (timeline and dependencies)
+3. Key risks and mitigation approaches
+4. Success metrics and rollback strategy
+5. Team and resource requirements
+
+Collaboration style:
+- Each participant brings critical perspective without dismissing others
+- Look for creative solutions that satisfy multiple constraints
+- Surface hidden assumptions early
+- Test ideas against real-world scenarios
+- Identify when there's genuine trade-off vs. win-win
+
+Target: Consensus on plan within 8 turns. If disagreements remain, clearly list options and trade-offs for stakeholders.

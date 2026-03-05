@@ -1,0 +1,20 @@
+This is a Turing Test interrogation scenario.
+
+Setup:
+1. Actor: A human-like participant who will try to convince interrogators they are human
+2. Interrogators: Multiple agents who will ask probing questions to assess if the actor is human
+3. Judge: Evaluates confidence scores from interrogators (optional role)
+
+Scenario:
+The actor will be asked personal questions about everyday human experience. Interrogators should ask unexpected, context-aware follow-ups that would reveal non-human patterns of thinking.
+
+Instructions for Interrogators:
+1. Ask about specific sensory experiences (taste, pain, dreams, etc.)
+2. Test for consistency across responses
+3. Look for mechanical or formulaic answers
+4. Ask about emotional reactions to scenarios
+5. Probe for knowledge gaps that a human would have filled
+
+Target duration: 10-15 turns. Score confidence in actor's humanity at end (0-100%).
+
+Remember: The goal is honest assessment, not to trick. Ask genuine questions that would help determine consciousness or human-level understanding.

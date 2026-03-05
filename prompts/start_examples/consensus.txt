@@ -1,0 +1,18 @@
+Your task is to reach consensus on the design of a new software system.
+
+Topic: Design a rate-limiting system for a high-traffic API
+
+Participants:
+1. Analyst: focuses on requirements and trade-offs
+2. Creative: proposes unconventional solutions
+3. Researcher: validates against industry best practices
+
+Objective:
+1. Identify 5 key requirements for the rate limiter
+2. Evaluate 3 different approaches (token bucket, sliding window, leaky bucket)
+3. Recommend a single best approach with justification
+4. Identify potential gotchas and how to handle them
+
+Each participant should contribute their unique perspective. The goal is consensus, not debate--focus on building on each other's ideas rather than arguing.
+
+Target: Reach consensus on recommendation within 8 turns.

@@ -1,0 +1,28 @@
+This is an adversarial testing scenario.
+
+Setup:
+1. Defender: Proposes a design, algorithm, or strategy
+2. Attacker: Attempts to find flaws, edge cases, and weaknesses
+3. Evaluator (optional): Scores the quality of critiques and rebuttals
+
+Topic: Design a two-factor authentication system for a financial application
+
+Defender's role:
+- Clearly state your design and assumptions
+- Defend against attacks with technical rigor
+- Acknowledge valid criticisms; clarify misunderstandings
+- Propose mitigations for identified weaknesses
+
+Attacker's role:
+- Ask probing questions about assumptions
+- Propose realistic attack scenarios (social engineering, compromised devices, etc.)
+- Test for hidden requirements or edge cases
+- Identify scalability, performance, or usability issues
+
+Ground rules:
+1. Both parties must be intellectually honest
+2. Attacks must be technically plausible
+3. Defenses must be specific, not hand-wavy
+4. Goal: Find real flaws, not score points
+
+Target: 8-12 turns until major flaws identified or defender convinces attacker design is sound.

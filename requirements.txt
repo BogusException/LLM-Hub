@@ -1,0 +1,11 @@
+# LAN-LLM-Hub Requirements
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+requests>=2.32.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Development (optional)
+pytest>=9.0.0

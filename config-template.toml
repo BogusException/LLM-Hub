@@ -1,0 +1,575 @@
+# LAN-LLM-Hub Configuration Template
+#
+# Copy this file to config.toml and fill in your API keys and agent settings.
+# Do not commit config.toml to git (it contains secrets).
+#
+# For large values (attitudes, system prompts, etc.), use file:// references:
+#   attitude = "file://./prompts/my_attitude.txt"
+# This keeps config clean and allows reuse of prompt files.
+
+# ============================================================================
+# SESSION CONFIGURATION
+# ============================================================================
+
+[session]
+
+# Routing Topology
+# Choose how agents communicate with each other:
+#   hub_spoke      - Central orchestrator (default, recommended)
+#   star           - One central agent (actor), others connect only to it
+#   round_robin    - Agents speak in rotation
+#   mesh           - Everyone talks to everyone (high token cost)
+#   arbiter_gated  - One arbiter controls routing
+topology = "hub_spoke"
+
+# Fanout Strategy (only used with hub_spoke topology)
+# How many recipients get each message:
+#   broadcast_except_sender - Send to all agents except sender (default)
+#   broadcast_all          - Send to all agents including sender (unusual)
+#   limited_1              - Send to only 1 agent per message (cost control)
+#   limited_2              - Send to only 2 agents per message
+fanout = "broadcast_except_sender"
+
+# Memory Configuration
+# How much history to keep per agent:
+keep_last_messages = 12          # Keep last N messages verbatim (default: 12)
+summarize_after_messages = 24    # Trigger summarization at this message count (default: 24)
+                                 # When exceeded, old messages are summarized and discarded
+
+# Stop Conditions / Budget Enforcement
+# Session stops when ANY of these limits are reached:
+max_turns_total = 100            # Stop after total N turns across all agents (default: 100)
+max_minutes = 60.0               # Stop after N minutes elapsed (default: 60)
+max_tokens_total = 100000        # Stop after N tokens consumed (default: 100000)
+
+# Per-Agent Limits
+max_turns_per_agent = null       # Max turns for any single agent (null = unlimited, default)
+cooldown_seconds = 0.0           # Minimum seconds between consecutive calls to same agent (default: 0)
+
+# Logging
+log_dir = "./logs"               # Directory for session logs (default: ./logs)
+                                 # Session logs: {session_id}.log (human-readable)
+                                 # Events logs: {session_id}.events.jsonl (machine-readable, optional)
+
+# ============================================================================
+# ROUTING CONFIGURATION
+# ============================================================================
+
+[routing]
+
+# Channel Subscriptions (Reserved for future use)
+# Currently all agents are on the "main" channel
+topic_default = "main"
+
+# ============================================================================
+# AGENT DEFINITIONS
+# ============================================================================
+#
+# Each [[agents]] section defines one agent. You can define multiple agents
+# with the same provider/model but different personalities.
+#
+# REQUIRED per agent:
+#   id       - Unique agent identifier (e.g., "gpt4_analyst", "claude_mediator")
+#   provider - openai, google, or anthropic
+#   model    - Model name (e.g., gpt-4, claude-3-sonnet, gemini-1.5-pro)
+#   api_key  - API key (or omit and use OPENAI_API_KEY, GOOGLE_API_KEY, ANTHROPIC_API_KEY env vars)
+#
+# OPTIONAL per agent:
+#   role              - Agent role in scenario (e.g., analyst, interrogator, judge)
+#   temperature       - Sampling temperature 0.0–2.0 (default: 0.7)
+#   max_tokens        - Max response length in tokens (default: 2000)
+#   attitude          - 1–2 sentence persona directive (use file:// for longer text)
+#   system_prompt     - System prompt for this agent (inline string or file://./path/to/file.txt)
+#   subscriptions     - List of channels agent subscribes to (currently unused, use ["main"])
+#   private_notes     - true/false: can send private messages to judge/arbiter (default: false)
+
+# ============================================================================
+# EXAMPLE 1: Multiple Instances of Same Model (OpenAI)
+# ============================================================================
+
+[[agents]]
+id = "gpt4_analyst"
+provider = "openai"
+model = "gpt-4"
+api_key = "sk-..."                    # Or: export OPENAI_API_KEY and omit this line
+temperature = 0.5                     # Lower = more focused, deterministic
+max_tokens = 2000
+role = "analyst"
+attitude = "Analytical and data-focused. Look for patterns and evidence."
+system_prompt = "You are a rigorous analyst. Demand evidence for all claims."
+subscriptions = ["main"]
+# private_notes = false               # This agent doesn't send private messages
+
+[[agents]]
+id = "gpt4_creative"
+provider = "openai"
+model = "gpt-4"
+api_key = "sk-..."
+temperature = 0.9                     # Higher = more creative, random
+max_tokens = 2000
+role = "creative"
+attitude = "Creative and imaginative. Explore unconventional ideas."
+system_prompt = "file://./prompts/system_creative.txt"  # Load from file
+subscriptions = ["main"]
+
+# ============================================================================
+# EXAMPLE 2: Google Gemini
+# ============================================================================
+
+# [[agents]]
+# id = "gemini_researcher"
+# provider = "google"
+# model = "gemini-1.5-pro"
+# api_key = "AIzaSy..."                # Or: export GOOGLE_API_KEY and omit this line
+# temperature = 0.5
+# max_tokens = 2000
+# role = "researcher"
+# attitude = "Research-oriented. Find authoritative sources and cross-check facts."
+# subscriptions = ["main"]
+
+# ============================================================================
+# EXAMPLE 3: Anthropic Claude
+# ============================================================================
+
+# [[agents]]
+# id = "claude_mediator"
+# provider = "anthropic"
+# model = "claude-3-sonnet"
+# api_key = "sk-ant-..."               # Or: export ANTHROPIC_API_KEY and omit this line
+# temperature = 0.6
+# max_tokens = 2000
+# role = "mediator"
+# attitude = "Seeks common ground. Summarize opposing views fairly."
+# subscriptions = ["main"]
+
+# ============================================================================
+# EXAMPLE 4: Star Topology with Judge (Turing Test Style)
+# ============================================================================
+#
+# Uncomment these to set up an interrogation scenario:
+#
+# [session]
+# topology = "star"  # One actor, multiple interrogators
+# max_turns_total = 50
+# max_minutes = 30
+#
+# [[agents]]
+# id = "actor"
+# provider = "openai"
+# model = "gpt-4"
+# api_key = "sk-..."
+# role = "actor"
+# attitude = "Respond naturally and conversationally. Maintain continuity."
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "interrogator_skeptic"
+# provider = "anthropic"
+# model = "claude-3-haiku"
+# api_key = "sk-ant-..."
+# role = "interrogator"
+# temperature = 0.4
+# attitude = "Skeptical interviewer. Probe for LLM tells and inconsistencies."
+# subscriptions = ["main"]
+# private_notes = true  # Sends confidence scores privately to judge
+#
+# [[agents]]
+# id = "interrogator_linguist"
+# provider = "google"
+# model = "gemini-1.5-pro"
+# api_key = "AIzaSy..."
+# role = "interrogator"
+# attitude = "Linguist. Focus on natural speech patterns and repair."
+# subscriptions = ["main"]
+# private_notes = true
+#
+# [[agents]]
+# id = "judge"
+# provider = "anthropic"
+# model = "claude-3-sonnet"
+# api_key = "sk-ant-..."
+# role = "judge"
+# attitude = "Collect confidences. Decide if sufficient evidence exists."
+# subscriptions = ["main"]
+
+# ============================================================================
+# SCENARIO EXAMPLES
+# ============================================================================
+#
+# The following sections show complete working configurations for each scenario.
+# Uncomment one scenario at a time and customize agents/models as needed.
+#
+# Each example includes:
+#   [session] config for that scenario type
+#   [[agents]] entries with appropriate roles and system prompts
+#   Comments explaining key choices
+#
+
+# ============================================================================
+# SCENARIO 1: DEBATE
+# ============================================================================
+# Topic: "Artificial Intelligence will have a net positive impact..."
+# Topology: hub_spoke (central orchestrator, all agents participate)
+# Agents: analyst, creative, researcher
+# Duration: ~10 turns per agent
+#
+# To use: Uncomment this block, fill in api_keys, then run:
+#   python src/hub.py --config config.toml --prompt-file prompts/start_examples/debate.txt
+
+# [session]
+# topology = "hub_spoke"
+# fanout = "broadcast_except_sender"
+# keep_last_messages = 12
+# summarize_after_messages = 24
+# max_turns_total = 40
+# max_minutes = 30.0
+# max_tokens_total = 80000
+# log_dir = "./logs"
+#
+# [[agents]]
+# id = "gpt4_analyst"
+# provider = "openai"
+# model = "gpt-4"
+# api_key = "sk-..."
+# temperature = 0.4
+# max_tokens = 2000
+# role = "analyst"
+# system_prompt = "file://./prompts/base_system_analyst.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "gpt4_creative"
+# provider = "openai"
+# model = "gpt-4"
+# api_key = "sk-..."
+# temperature = 0.8
+# max_tokens = 2000
+# role = "creative"
+# system_prompt = "file://./prompts/base_system_creative.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "claude_researcher"
+# provider = "anthropic"
+# model = "claude-3-sonnet"
+# api_key = "sk-ant-..."
+# temperature = 0.5
+# max_tokens = 2000
+# role = "researcher"
+# system_prompt = "file://./prompts/base_system_researcher.txt"
+# subscriptions = ["main"]
+
+# ============================================================================
+# SCENARIO 2: CONSENSUS BUILDING
+# ============================================================================
+# Topic: "Design a rate-limiting system for a high-traffic API"
+# Topology: hub_spoke
+# Agents: analyst (requirements), creative (alternatives), researcher (validation)
+# Duration: ~8 turns, goal is agreement
+#
+# To use: Uncomment this block, fill in api_keys, then run:
+#   python src/hub.py --config config.toml --prompt-file prompts/start_examples/consensus.txt
+
+# [session]
+# topology = "hub_spoke"
+# fanout = "broadcast_except_sender"
+# keep_last_messages = 12
+# summarize_after_messages = 24
+# max_turns_total = 32
+# max_minutes = 30.0
+# max_tokens_total = 80000
+# log_dir = "./logs"
+#
+# [[agents]]
+# id = "claude_analyst"
+# provider = "anthropic"
+# model = "claude-3-sonnet"
+# api_key = "sk-ant-..."
+# temperature = 0.5
+# max_tokens = 2000
+# role = "analyst"
+# attitude = "Systematic. Focus on requirements and hard constraints."
+# system_prompt = "file://./prompts/base_system_analyst.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "gpt4_creative"
+# provider = "openai"
+# model = "gpt-4-turbo"
+# api_key = "sk-..."
+# temperature = 0.7
+# max_tokens = 2000
+# role = "creative"
+# system_prompt = "file://./prompts/base_system_creative.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "gemini_researcher"
+# provider = "google"
+# model = "gemini-1.5-pro"
+# api_key = "AIzaSy..."
+# temperature = 0.5
+# max_tokens = 2000
+# role = "researcher"
+# system_prompt = "file://./prompts/base_system_researcher.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "claude_mediator"
+# provider = "anthropic"
+# model = "claude-3-haiku"
+# api_key = "sk-ant-..."
+# temperature = 0.5
+# max_tokens = 2000
+# role = "mediator"
+# system_prompt = "file://./prompts/base_system_mediator.txt"
+# subscriptions = ["main"]
+
+# ============================================================================
+# SCENARIO 3: INTERROGATION (TURING TEST)
+# ============================================================================
+# Topic: Assess if actor is human or AI
+# Topology: star (actor in center, interrogators around)
+# Agents: actor (responds to questions), interrogators (ask questions), judge (evaluates)
+# Duration: 10-15 turns
+#
+# To use: Uncomment this block, fill in api_keys, then run:
+#   python src/hub.py --config config.toml --prompt-file prompts/start_examples/interrogation.txt
+
+# [session]
+# topology = "star"
+# fanout = "broadcast_except_sender"
+# keep_last_messages = 15
+# summarize_after_messages = 30
+# max_turns_total = 50
+# max_minutes = 30.0
+# max_tokens_total = 100000
+# log_dir = "./logs"
+#
+# [[agents]]
+# id = "actor"
+# provider = "openai"
+# model = "gpt-4"
+# api_key = "sk-..."
+# temperature = 0.7
+# max_tokens = 1500
+# role = "actor"
+# system_prompt = "file://./prompts/base_system_actor.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "interrogator_skeptic"
+# provider = "anthropic"
+# model = "claude-3-haiku"
+# api_key = "sk-ant-..."
+# temperature = 0.6
+# max_tokens = 1500
+# role = "interrogator"
+# system_prompt = "file://./prompts/base_system_interrogator.txt"
+# attitude = "Skeptical. Look for inconsistencies and mechanical answers."
+# subscriptions = ["main"]
+# private_notes = true
+#
+# [[agents]]
+# id = "interrogator_psychologist"
+# provider = "google"
+# model = "gemini-1.5-pro"
+# api_key = "AIzaSy..."
+# temperature = 0.6
+# max_tokens = 1500
+# role = "interrogator"
+# system_prompt = "file://./prompts/base_system_interrogator.txt"
+# attitude = "Psychologist. Probe emotional responses and personal memories."
+# subscriptions = ["main"]
+# private_notes = true
+#
+# [[agents]]
+# id = "judge"
+# provider = "anthropic"
+# model = "claude-3-sonnet"
+# api_key = "sk-ant-..."
+# temperature = 0.3
+# max_tokens = 2000
+# role = "judge"
+# system_prompt = "file://./prompts/base_system_judge.txt"
+# subscriptions = ["main"]
+
+# ============================================================================
+# SCENARIO 4: ADVERSARIAL TESTING
+# ============================================================================
+# Topic: "Design a two-factor authentication system for a financial app"
+# Topology: star (defender in center, attackers probe)
+# Agents: defender (proposes design), attacker (finds flaws), evaluator (scores)
+# Duration: 8-12 turns
+#
+# To use: Uncomment this block, fill in api_keys, then run:
+#   python src/hub.py --config config.toml --prompt-file prompts/start_examples/adversarial.txt
+
+# [session]
+# topology = "star"
+# fanout = "broadcast_except_sender"
+# keep_last_messages = 12
+# summarize_after_messages = 24
+# max_turns_total = 40
+# max_minutes = 30.0
+# max_tokens_total = 100000
+# log_dir = "./logs"
+#
+# [[agents]]
+# id = "defender"
+# provider = "openai"
+# model = "gpt-4"
+# api_key = "sk-..."
+# temperature = 0.5
+# max_tokens = 2000
+# role = "defender"
+# system_prompt = "file://./prompts/base_system_defender.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "attacker_technical"
+# provider = "anthropic"
+# model = "claude-3-sonnet"
+# api_key = "sk-ant-..."
+# temperature = 0.6
+# max_tokens = 2000
+# role = "attacker"
+# system_prompt = "file://./prompts/base_system_attacker.txt"
+# attitude = "Security engineer. Find technical vulnerabilities and bypasses."
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "attacker_social"
+# provider = "google"
+# model = "gemini-1.5-pro"
+# api_key = "AIzaSy..."
+# temperature = 0.6
+# max_tokens = 2000
+# role = "attacker"
+# system_prompt = "file://./prompts/base_system_attacker.txt"
+# attitude = "Social engineer. Find human-facing vulnerabilities and process gaps."
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "evaluator"
+# provider = "anthropic"
+# model = "claude-3-haiku"
+# api_key = "sk-ant-..."
+# temperature = 0.3
+# max_tokens = 1500
+# role = "evaluator"
+# system_prompt = "file://./prompts/base_system_judge.txt"
+# attitude = "Evaluate attack quality and defense rigor."
+# subscriptions = ["main"]
+
+# ============================================================================
+# SCENARIO 5: DESIGN REVIEW (CONSENSUS)
+# ============================================================================
+# Topic: "Plan a technical migration from monolithic service to microservices"
+# Topology: hub_spoke
+# Agents: architect (design), operations (reliability), product (business)
+# Duration: ~8 turns, goal is consensus on migration plan
+#
+# To use: Uncomment this block, fill in api_keys, then run:
+#   python src/hub.py --config config.toml --prompt-file prompts/start_examples/design_review.txt
+
+# [session]
+# topology = "hub_spoke"
+# fanout = "broadcast_except_sender"
+# keep_last_messages = 12
+# summarize_after_messages = 24
+# max_turns_total = 35
+# max_minutes = 30.0
+# max_tokens_total = 100000
+# log_dir = "./logs"
+#
+# [[agents]]
+# id = "architect"
+# provider = "openai"
+# model = "gpt-4"
+# api_key = "sk-..."
+# temperature = 0.5
+# max_tokens = 2000
+# role = "architect"
+# system_prompt = "file://./prompts/base_system_architect.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "operations"
+# provider = "anthropic"
+# model = "claude-3-sonnet"
+# api_key = "sk-ant-..."
+# temperature = 0.5
+# max_tokens = 2000
+# role = "operations"
+# system_prompt = "file://./prompts/base_system_operations.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "product"
+# provider = "google"
+# model = "gemini-1.5-pro"
+# api_key = "AIzaSy..."
+# temperature = 0.5
+# max_tokens = 2000
+# role = "product"
+# system_prompt = "file://./prompts/base_system_product.txt"
+# subscriptions = ["main"]
+#
+# [[agents]]
+# id = "mediator"
+# provider = "anthropic"
+# model = "claude-3-haiku"
+# api_key = "sk-ant-..."
+# temperature = 0.5
+# max_tokens = 1500
+# role = "mediator"
+# system_prompt = "file://./prompts/base_system_mediator.txt"
+# subscriptions = ["main"]
+
+# ============================================================================
+# NOTES ON CONFIGURATION
+# ============================================================================
+#
+# API KEYS:
+#   - Specify inline: api_key = "sk-..." (not recommended for committed files)
+#   - Use environment: export OPENAI_API_KEY="sk-..." and omit api_key
+#   - Both methods work; env vars take precedence
+#
+# MULTIPLE MODELS:
+#   Define separate agent entries with different IDs, even if using same model:
+#   - Different temperatures for varied behavior
+#   - Different attitudes for different perspectives
+#   - Different roles for different responsibilities
+#
+# FILE REFERENCES:
+#   Use file:// for large text values:
+#   - attitude = "file://./prompts/my_attitude.txt"
+#   - system_prompt = "file://./prompts/system.txt" (load system prompt from file)
+#
+# TOPOLOGY SELECTION:
+#   hub_spoke    - Most scenarios (debate, consensus, design review)
+#   star         - Interrogation harness, Turing test, actor vs interrogators
+#   round_robin  - Structured discussion, cost control
+#   mesh         - Small groups (2-3 agents), high interactivity, high cost
+#   arbiter      - Moderated discussions, filtered communication
+#
+# TEMPERATURE GUIDANCE:
+#   0.0–0.3     - Focused, deterministic (analysts, judges)
+#   0.5–0.7     - Balanced, default (most agents)
+#   0.8–1.0     - Creative, varied (creative roles)
+#   1.0–2.0     - Very random (exploration, brainstorming)
+#
+# BUDGET MANAGEMENT:
+#   If tokens run high:
+#   - Reduce keep_last_messages (smaller window = fewer tokens per call)
+#   - Reduce max_turns_total (fewer turns)
+#   - Use cheaper models (gpt-3.5 instead of gpt-4)
+#   - Use limited_1 or limited_2 fanout (fewer recipients per message)
+#   - Use round_robin topology (one agent per turn)
+#
+# LOGGING:
+#   Session logs appear in: ./logs/{session_id}.log
+#   Format: YYYY-MM-DD hh:mm:ss: [AGENT_ID] message
+#   Tail in real-time: tail -f logs/20260304153022.log
+#
