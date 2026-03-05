@@ -1,7 +1,10 @@
-# added by pat
-config.toml
-logs/
-.env
+# Project-specific (secrets & internal docs)
+config.toml                  # Local config with API keys
+logs/                        # Session logs (runtime output)
+.env                         # Environment variables
+.env.local                   # Local environment overrides
+CLAUDE.md                    # Development notes (not for public)
+docs/internal/               # Internal architecture docs (not for public)
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
