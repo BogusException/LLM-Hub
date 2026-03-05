@@ -184,9 +184,9 @@ Each scenario has built-in system prompts (via `file://./prompts/base_system_*.t
 Instead of storing API keys in `config.toml`, use environment variables:
 
 ```bash
-export OPENAI_KEY="sk-..."
-export ANTHROPIC_KEY="sk-ant-..."
-export GOOGLE_KEY="AIzaSy..."
+export CHATGPT_KEY="sk-..."
+export CLAUDE_KEY="sk-ant-..."
+export GEMINI_KEY="AIzaSy..."
 
 python -m src.hub --config config.toml --prompt-file prompts/start.txt
 ```
@@ -197,7 +197,7 @@ In `config.toml`, leave `api_key` blank or omit it:
 id = "agent1"
 provider = "openai"
 model = "gpt-4"
-# api_key line omitted—will use OPENAI_KEY
+# api_key line omitted—will use CHATGPT_KEY
 ```
 
 ## Troubleshooting

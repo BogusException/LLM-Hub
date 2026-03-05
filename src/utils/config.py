@@ -6,6 +6,13 @@ from typing import Any, Optional
 import tomllib  # Python 3.11+
 from .debug import get_debug_logger
 
+# Product name mapping for environment variables
+PRODUCT_NAMES = {
+    "openai": "CHATGPT",
+    "anthropic": "CLAUDE",
+    "google": "GEMINI",
+}
+
 
 def load_config_value(value: Any, base_path: Path) -> Any:
     """Load a config value, handling file references.
@@ -180,13 +187,12 @@ class ConfigLoader:
                 provider = agent["provider"].lower()
 
                 # Resolve API key: config → env var → error
-                api_key = agent.get("api_key") or os.environ.get(
-                    f"{provider.upper()}_KEY"
-                )
+                product_name = PRODUCT_NAMES.get(provider, provider.upper())
+                api_key = agent.get("api_key") or os.environ.get(f"{product_name}_KEY")
                 if not api_key:
                     raise ValueError(
                         f"Agent '{agent_id}' missing API key. "
-                        f"Provide in config as api_key or set {provider.upper()}_KEY env var"
+                        f"Provide in config as api_key or set {product_name}_KEY env var"
                     )
 
                 # Resolve system prompt: prefer system_prompt_file if provided, else system_prompt
