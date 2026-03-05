@@ -43,7 +43,7 @@ max_minutes = 60.0               # Stop after N minutes elapsed (default: 60)
 max_tokens_total = 100000        # Stop after N tokens consumed (default: 100000)
 
 # Per-Agent Limits
-max_turns_per_agent = null       # Max turns for any single agent (null = unlimited, default)
+# max_turns_per_agent = ""        # Max turns for any single agent (omitted = unlimited, default)
 cooldown_seconds = 0.0           # Minimum seconds between consecutive calls to same agent (default: 0)
 
 # Logging
